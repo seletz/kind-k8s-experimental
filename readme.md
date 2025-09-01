@@ -65,3 +65,41 @@ kubectl apply -f pg-cluster-example.yml
 # Import the CloudNativePG Dashboard
 kubectl apply -f cloudnative-pg-dashboard.yml
 ```
+
+# In-Cluster Management UI
+
+Following the [docs](https://headlamp.dev/docs/latest/installation/in-cluster/)
+
+```
+# Apply the configuration
+kubectl apply -f kubernetes-headlamp.yaml
+
+# To have headlamp "see" cluster usage, we need to install metrics-server
+# Downloaded from: https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+# Modified for kind clusters by adding --kubelet-insecure-tls flag due to TLS certificate issues
+#
+# Diff applied to metrics-server Deployment spec.template.spec.containers[0].args:
+#   - --cert-dir=/tmp
+#   - --secure-port=10250
+#   - --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname
+#   - --kubelet-use-node-status-port
+#   - --metric-resolution=15s
+# + - --kubelet-insecure-tls
+#
+kubectl apply -f metrics-server-deployment.yaml
+```
+
+Use port-forward to access:
+
+```
+kubectl port-forward -n kube-system service/headlamp 8080:80
+```
+
+To access Headlamp, you'll need the service account token:
+
+```
+# Get the Headlamp access token
+kubectl get secret headlamp-admin -n kube-system -o jsonpath='{.data.token}' | base64 -d ; echo
+```
+
+Copy this token and paste it into the Headlamp login screen when accessing the UI.
