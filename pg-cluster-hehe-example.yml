@@ -1,0 +1,35 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  namespace: hehe-dev
+  name: hehe-db-cluster
+spec:
+  instances: 3
+
+  monitoring:
+    enablePodMonitor: true
+
+  bootstrap:
+    initdb:
+      database: hehe
+      owner: hehe
+      secret:
+        name: hehe-dev-db
+      import:
+        type: microservice
+        databases:
+          - helferhelfer_local_call-us
+        source:
+          externalCluster: seletz-hehe-local
+
+  storage:
+    size: 1Gi
+
+  externalClusters:
+    - name: seletz-hehe-local
+      connectionParameters:
+        # Use the correct IP or host name for the source database
+        host: 192.168.200.30
+        user: careassist
+        password: careassist
+        dbname: helferhelfer_local_call-us

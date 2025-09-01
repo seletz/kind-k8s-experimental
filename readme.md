@@ -60,8 +60,9 @@ Following the [docs](https://cloudnative-pg.io/documentation/1.27/installation_u
 kubectl apply --server-side -f \
   https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-1.27/releases/cnpg-1.27.0.yaml
 
-# Create a namespace for our new cluster
+# Create and activate namespace for our new cluster
 kubectl create namespace pg-example-cluster
+kubectl config set-context $(kubectl config current-context) --namespace pg-example-cluster
 
 # And provision a clister with 3 instances (1 master, 2 replicas)
 kubectl apply -f pg-cluster-example.yml
@@ -161,3 +162,75 @@ Access: http://localhost:9093
 kubectl port-forward -n kube-system service/headlamp 8080:80
 ```
 Access: http://localhost:8080
+
+# Example Use Cases
+
+## Importing existing off-cluster DB
+
+See [bootstrap](https://cloudnative-pg.io/documentation/1.27/bootstrap/#) and [import databases](https://cloudnative-pg.io/documentation/1.27/database_import/).
+
+To import a existing database into the cluster, we need to be able to connect **from K8S** to the source
+database.  Once we have that, we can create a cluster *and specify a import job* which uses `pg_dump` to
+dump the source and create the target database.
+
+The `pg-cluster-hehe-example.yml` is a example, it assumes a running database at `192.168.200.30` with
+credentials specified.
+
+> [!Note]
+> The example specifies the password of the source in cleartext.  In prod, use a `secret ref`.
+
+```
+# Create a new namespace and activate it
+kubectl create nmespace hehe-dev
+kubectl config set-context $(kubectl config current-context) --namespace hehe-dev
+
+# Create a secret for the new database user
+kubectl create secret generic hehe-dev-db-secret \
+    --from-literal=username=careassist \
+    --from-literal=password=secret
+
+# Create the cluster and import the DB
+kubectl apply -f pg-cluster-hehe-example.yml
+```
+
+The operator will create the primary, create a **import job**, imports teh DB an then continues creating
+secondaries.
+
+```
+kubectl cnpg psql hehe-db-cluster hehe
+psql (17.5 (Debian 17.5-1.pgdg110+1))
+Type "help" for help.
+
+hehe=# \dg
+                                 List of roles
+     Role name     |                         Attributes
+-------------------+------------------------------------------------------------
+ hehe              |
+ postgres          | Superuser, Create role, Create DB, Replication, Bypass RLS
+ streaming_replica | Replication
+
+hehe=# select id,sync_id from careassist_subscriber limit 5;
+ id |               sync_id
+----+--------------------------------------
+  9 | 775ed758-1a70-ef11-b52e-00155d750b01
+ 11 | e93c5559-bb66-ef11-b52e-00155d750b01
+  8 | 714b1778-1970-ef11-b52e-00155d750b01
+ 15 | 88e98719-8410-f011-b52f-00155d750b01
+  3 |
+(5 rows)
+
+hehe=#
+```
+
+Note that the target database's user and password are created according to the spec in the *initdb*
+section with tis particular configuration.  The tables etc are re-owned to the newly created user.
+
+To get the password, use:
+
+```
+kubectl get secret hehe-dev-db-secret -o jsonpath='{.data.password}' | base64 -d
+```
+
+> [!Note]
+> The method is suitble for importing DBs of **source** PG versions lower or equal the **cluster** version.
+> In this particular example, the source version was *16.10* and the tharget version is *17.5*.
