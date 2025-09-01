@@ -73,6 +73,27 @@ kubectl label podmonitor pg-example-cluster release=monitoring
 kubectl apply -f cloudnative-pg-dashboard.yml
 ```
 
+## CLI Management
+
+Using the `krew` plugin `cnpg` we can manage PG clusters. (see [docs](https://cloudnative-pg.io/documentation/1.27/kubectl-plugin/#))
+
+```
+brew install kubectl-cnpg
+```
+
+(restart your shell)
+
+Then you can do things like:
+
+```
+kubectl cnpg psql pg-example-cluster
+psql (17.5 (Debian 17.5-1.pgdg110+1))
+Type "help" for help.
+
+postgres=#
+```
+
+
 # In-Cluster Management UI
 
 Following the [docs](https://headlamp.dev/docs/latest/installation/in-cluster/)
