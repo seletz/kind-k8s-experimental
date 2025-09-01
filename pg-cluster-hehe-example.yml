@@ -14,7 +14,7 @@ spec:
       database: hehe
       owner: hehe
       secret:
-        name: hehe-dev-db
+        name: hehe-dev-db-secret
       import:
         type: microservice
         databases:
