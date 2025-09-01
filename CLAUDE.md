@@ -101,11 +101,31 @@ kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/late
 
 ## Service Access
 
-All services are configured as NodePort for easy local access:
-- **Prometheus**: NodePort service in monitoring namespace
-- **Grafana**: NodePort service in monitoring namespace (default login: admin/[generated-password])
-- **Alertmanager**: NodePort service in monitoring namespace
-- **Headlamp**: Service in kube-system namespace with metrics and tracing enabled
+All services are accessed via kubectl port-forward:
+
+```bash
+# Grafana (monitoring dashboards)
+kubectl port-forward -n monitoring service/monitoring-grafana 3000:80
+# Access: http://localhost:3000 (admin/[generated-password])
+
+# Prometheus (metrics collection)
+kubectl port-forward -n monitoring service/monitoring-kube-prometheus-prometheus 9090:9090
+# Access: http://localhost:9090
+
+# Alertmanager (alert management)
+kubectl port-forward -n monitoring service/monitoring-kube-prometheus-alertmanager 9093:9093
+# Access: http://localhost:9093
+
+# Headlamp (Kubernetes dashboard)
+kubectl port-forward -n kube-system service/headlamp 8080:80
+# Access: http://localhost:8080 (requires service account token)
+
+# Get Grafana admin password
+kubectl get secret -n monitoring monitoring-grafana -o jsonpath="{.data.admin-password}" | base64 -d ; echo
+
+# Get Headlamp access token
+kubectl get secret headlamp-admin -n kube-system -o jsonpath='{.data.token}' | base64 -d ; echo
+```
 
 ## Monitoring Integration
 

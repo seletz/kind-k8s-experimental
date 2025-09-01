@@ -13,6 +13,8 @@ kind get kubeconfig --name experimental | pbcopy
 
 # Monitoring
 
+![](images/grafana-kubelet.png)
+
 ```
 # Add the Prometheus community Helm repository
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
@@ -51,6 +53,8 @@ The default installation adds many useful dashboards.
 
 Following the [docs](https://cloudnative-pg.io/documentation/1.27/installation_upgrade/)
 
+![](images/grafana-pg.png)
+
 ```
 # Install the Operator Manifest
 kubectl apply --server-side -f \
@@ -69,6 +73,8 @@ kubectl apply -f cloudnative-pg-dashboard.yml
 # In-Cluster Management UI
 
 Following the [docs](https://headlamp.dev/docs/latest/installation/in-cluster/)
+
+![](images/headlamp.png)
 
 ```
 # Apply the configuration
@@ -103,3 +109,31 @@ kubectl get secret headlamp-admin -n kube-system -o jsonpath='{.data.token}' | b
 ```
 
 Copy this token and paste it into the Headlamp login screen when accessing the UI.
+
+# Accessing All Services
+
+Once everything is deployed, you can access all services via port-forwarding:
+
+## Grafana Dashboard
+```
+kubectl port-forward -n monitoring service/monitoring-grafana 3000:80
+```
+Access: http://localhost:3000 (login: admin/[password from earlier])
+
+## Prometheus
+```
+kubectl port-forward -n monitoring service/monitoring-kube-prometheus-prometheus 9090:9090
+```
+Access: http://localhost:9090
+
+## Alertmanager
+```
+kubectl port-forward -n monitoring service/monitoring-kube-prometheus-alertmanager 9093:9093
+```
+Access: http://localhost:9093
+
+## Headlamp (already covered above)
+```
+kubectl port-forward -n kube-system service/headlamp 8080:80
+```
+Access: http://localhost:8080
