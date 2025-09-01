@@ -1,0 +1,13 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: pg-example-cluster
+  namespace: pg-example-cluster
+spec:
+  instances: 3
+
+  monitoring:
+    enablePodMonitor: true
+
+  storage:
+    size: 1Gi

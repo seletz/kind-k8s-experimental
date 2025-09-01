@@ -46,3 +46,22 @@ kubectl --namespace monitoring port-forward $POD_NAME 3000
 Now you can access http://localhost:3000
 
 The default installation adds many useful dashboards.
+
+# PostgreSQL: CloudNativePG
+
+Following the [docs](https://cloudnative-pg.io/documentation/1.27/installation_upgrade/)
+
+```
+# Install the Operator Manifest
+kubectl apply --server-side -f \
+  https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-1.27/releases/cnpg-1.27.0.yaml
+
+# Create a namespace for our new cluster
+kubectl create namespace pg-example-cluster
+
+# And provision a clister with 3 instances (1 master, 2 replicas)
+kubectl apply -f pg-cluster-example.yml
+
+# Import the CloudNativePG Dashboard
+kubectl apply -f cloudnative-pg-dashboard.yml
+```
