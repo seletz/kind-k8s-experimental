@@ -66,6 +66,9 @@ kubectl create namespace pg-example-cluster
 # And provision a clister with 3 instances (1 master, 2 replicas)
 kubectl apply -f pg-cluster-example.yml
 
+# To enable scraping, label the podmonitor
+kubectl label podmonitor pg-example-cluster release=monitoring
+
 # Import the CloudNativePG Dashboard
 kubectl apply -f cloudnative-pg-dashboard.yml
 ```
