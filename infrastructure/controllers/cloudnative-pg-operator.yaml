@@ -34,7 +34,10 @@ spec:
   values:
     crds:
       create: true
-    # Reduce worker count for small kind cluster (4 nodes total)
+    # Fix webhook port configuration - use 9443 which is the actual webhook port
+    service:
+      port: 9443
+    # Reduce worker count for small kind cluster (4 nodes total) 
     maxConcurrentReconciles: 3
     resources:
       requests:
