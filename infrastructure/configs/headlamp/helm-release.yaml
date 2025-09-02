@@ -37,7 +37,7 @@ spec:
         command:
           - /bin/sh
           - -c
-          - mkdir -p /build/plugins && cp -r /plugins/* /build/plugins/ && chown -R 100:101 /build
+          - mkdir -p /build/plugins && cp -r /plugins/* /build/plugins/
         volumeMounts:
           - name: plugins-volume
             mountPath: /build
