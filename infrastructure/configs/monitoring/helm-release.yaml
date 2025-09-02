@@ -25,13 +25,8 @@ spec:
   values:
     prometheus:
       prometheusSpec:
-        podMonitorSelector:
-          matchExpressions:
-            - key: release
-              operator: In
-              values: ["monitoring"]
-            - key: cnpg.io/cluster
-              operator: Exists
-            - key: app.kubernetes.io/component
-              operator: In
-              values: ["database"]
+        # Disable restrictive label matching to discover all PodMonitors
+        podMonitorSelectorNilUsesHelmValues: false
+        serviceMonitorSelectorNilUsesHelmValues: false
+        ruleSelectorNilUsesHelmValues: false
+        podMonitorSelector: {}  # Now truly selects all PodMonitors
