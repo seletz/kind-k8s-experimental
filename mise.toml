@@ -55,3 +55,32 @@ run = "kind delete cluster --name experimental"
 [tasks.validate]
 description = "Validate all GitOps configuration locally"
 run = "./scripts/validate.sh"
+
+[tasks.port_forward_all]
+description = "Start port-forwards for all services (Grafana, Prometheus, Alertmanager, Headlamp)"
+run = """
+echo "🚀 Starting port-forwards for all services..."
+echo "  → Grafana: http://localhost:3000"
+echo "  → Prometheus: http://localhost:9090"
+echo "  → Alertmanager: http://localhost:9093"
+echo "  → Headlamp: http://localhost:8080"
+echo ""
+echo "To stop all port-forwards: pkill -f 'kubectl port-forward'"
+echo ""
+
+# Start all port-forwards in background
+kubectl port-forward -n monitoring service/kube-prometheus-stack-grafana 3000:80 &
+kubectl port-forward -n monitoring service/kube-prometheus-stack-prometheus 9090:9090 &
+kubectl port-forward -n monitoring service/kube-prometheus-stack-alertmanager 9093:9093 &
+kubectl port-forward -n headlamp-system service/headlamp-system-headlamp 8080:80 &
+
+echo "✅ All port-forwards started!"
+echo ""
+echo "📋 Access credentials:"
+echo "  Grafana: admin/$(kubectl get secret -n monitoring kube-prometheus-stack-grafana -o jsonpath="{.data.admin-password}" | base64 -d)"
+echo "  Headlamp: Use token from 'mise run headlamp_token'"
+"""
+
+[tasks.headlamp_token]
+description = "Get Headlamp access token an put it into the clipboard"
+run = "kubectl get secret headlamp-admin-token -n headlamp-system -o jsonpath='{.data.token}' | base64 -d | pbcopy"
