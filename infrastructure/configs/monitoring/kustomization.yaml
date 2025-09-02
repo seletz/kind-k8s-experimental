@@ -5,3 +5,4 @@ namespace: monitoring
 resources:
   - namespace.yaml
   - helm-release.yaml
+  - flux-dashboards.yaml
