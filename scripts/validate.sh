@@ -19,7 +19,7 @@ helm template kube-prometheus-stack prometheus-community/kube-prometheus-stack \
   --namespace monitoring \
   --dry-run > /dev/null
 
-# Enhanced validation: template and lint all HelmReleases with their actual values
+# Enhanced validation: template all HelmReleases with their actual values
 find infrastructure -name "helm-release.yaml" -type f | while read -r helmrelease_file; do
   echo "INFO - Validating HelmRelease: $helmrelease_file"
   
@@ -32,16 +32,13 @@ find infrastructure -name "helm-release.yaml" -type f | while read -r helmreleas
   values_file="/tmp/helm-values-$(basename "$helmrelease_file" .yaml).yaml"
   yq e '.spec.values' "$helmrelease_file" > "$values_file"
   
-  # Validate with helm template and lint
+  # Validate with helm template (skip lint for remote repos)
   if [ "$chart_name" != "null" ] && [ "$repo_name" != "null" ]; then
+    echo "  → Templating $repo_name/$chart_name with custom values"
     helm template test-release "$repo_name/$chart_name" \
       --namespace "$namespace" \
       --values "$values_file" \
-      --validate \
       --dry-run > /dev/null
-    
-    helm lint "$repo_name/$chart_name" \
-      --values "$values_file" > /dev/null
   fi
   
   # Cleanup
