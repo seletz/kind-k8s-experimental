@@ -16,7 +16,27 @@ kind get kubeconfig --name experimental | pbcopy
 
 # GitOps with Flux
 
-This repository is configured for GitOps using Flux. After creating the cluster, bootstrap Flux:
+This repository is configured for GitOps using Flux.
+
+## GitHub Token Setup
+
+For Flux bootstrap to work, you need a GitHub fine-grained Personal Access Token with these permissions:
+
+**Required Repository Permissions:**
+- **Administration**: `Read and write` (needed to create deploy keys)
+- **Contents**: `Read and write` (needed to read/write repository files)  
+- **Metadata**: `Read-only` (needed to access repository metadata)
+
+To create the token:
+1. Go to GitHub Settings > Developer settings > Personal access tokens > Fine-grained tokens
+2. Click "Generate new token"
+3. Select your repository (`kind-k8s-experimental`)
+4. Set the permissions above
+5. Generate and save the token
+
+## Bootstrap Flux
+
+After creating the cluster, bootstrap Flux:
 
 ```
 # Bootstrap Flux (if not already done)
