@@ -11,7 +11,7 @@ spec:
     branch: develop
   secretRef:
     name: flux-system
-  url: https://github.com/seletz/kind-k8s-experimental.git
+  url: ssh://git@github.com/seletz/kind-k8s-experimental
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
