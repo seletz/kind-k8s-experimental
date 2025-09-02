@@ -43,12 +43,12 @@ spec:
             mountPath: /build
     
     # Add volume for plugin sharing
-    extraVolumes:
+    volumes:
       - name: plugins-volume
         emptyDir: {}
     
     # Mount plugin volume in main container
-    extraVolumeMounts:
+    volumeMounts:
       - name: plugins-volume
         mountPath: /build
     
