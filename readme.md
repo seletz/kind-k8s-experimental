@@ -55,10 +55,16 @@ mise run flux_kustomisations
 mise run validate
 ```
 
-The infrastructure will be automatically deployed via Flux:
-- **Monitoring**: kube-prometheus-stack via Helm
-- **PostgreSQL**: CloudNativePG operator + cluster
-- **Headlamp**: Kubernetes dashboard + metrics-server
+The infrastructure will be automatically deployed via Flux GitOps in two phases:
+
+**Phase 1 (Controllers):**
+- CloudNativePG operator (Helm chart)
+- Helm repositories (prometheus-community, grafana, cnpg)
+
+**Phase 2 (Configs - deployed after controllers are ready):**
+- **Monitoring**: kube-prometheus-stack with PostgreSQL and Flux dashboards
+- **PostgreSQL**: 3-instance cluster with monitoring integration
+- **Management**: Headlamp dashboard + metrics-server (kind-optimized)
 
 Monitor deployment status:
 ```
@@ -71,68 +77,24 @@ kubectl get pods -n pg-example-cluster
 kubectl get pods -n kube-system | grep -E "(headlamp|metrics-server)"
 ```
 
-# Monitoring
+# Dashboards Available
 
 ![](images/grafana-kubelet.png)
 
-```
-# Add the Prometheus community Helm repository
-helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-helm repo add grafana https://grafana.github.io/helm-charts
-helm repo update
-
-# Install the complete stack
-helm install monitoring prometheus-community/kube-prometheus-stack \
-  --namespace monitoring \
-  --create-namespace \
-  --set prometheus.service.type=NodePort \
-  --set grafana.service.type=NodePort \
-  --set alertmanager.service.type=NodePort
-  ```
-
-  In Lens, switch to "prometheus" as metrics source, then switch to "Prometheus Operator".
-
-To access grafana, first get the grafana admin password:
-
-```
-kubectl --namespace monitoring get secrets monitoring-grafana -o jsonpath="{.data.admin-password}" | base64 -d ; echo
-```
-
-Then add a port forward:
-
-```
-export POD_NAME=$(kubectl --namespace monitoring get pod -l "app.kubernetes.io/name=grafana,app.kubernetes.io/instance=monitoring" -oname)
-kubectl --namespace monitoring port-forward $POD_NAME 3000
-```
-
-Now you can access http://localhost:3000
-
-The default installation adds many useful dashboards.
+The GitOps setup includes pre-configured dashboards:
+- **Kubernetes monitoring**: Standard cluster, node, and pod metrics
+- **CloudNativePG**: PostgreSQL cluster monitoring and performance
+- **Flux Control Plane**: GitOps pipeline monitoring and controller metrics
 
 # PostgreSQL: CloudNativePG
 
-Following the [docs](https://cloudnative-pg.io/documentation/1.27/installation_upgrade/)
+![](images/grafana-cnpg.png)
 
-![](images/grafana-pg.png)
-
-```
-# Install the Operator Manifest
-kubectl apply --server-side -f \
-  https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-1.27/releases/cnpg-1.27.0.yaml
-
-# Create and activate namespace for our new cluster
-kubectl create namespace pg-example-cluster
-kubectl config set-context $(kubectl config current-context) --namespace pg-example-cluster
-
-# And provision a clister with 3 instances (1 master, 2 replicas)
-kubectl apply -f pg-cluster-example.yml
-
-# To enable scraping, label the podmonitor
-kubectl label podmonitor pg-example-cluster release=monitoring
-
-# Import the CloudNativePG Dashboard
-kubectl apply -f cloudnative-pg-dashboard.yml
-```
+The PostgreSQL cluster is automatically deployed via Flux GitOps:
+- **Operator**: CloudNativePG deployed in `cnpg-system` namespace via Helm
+- **Cluster**: 3-instance PostgreSQL cluster (1 primary + 2 replicas) 
+- **Monitoring**: Automatic metrics export with Grafana dashboard
+- **Management**: kubectl cnpg plugin for cluster operations
 
 ## CLI Management
 
@@ -186,42 +148,44 @@ Use port-forward to access:
 kubectl port-forward -n kube-system service/headlamp 8080:80
 ```
 
-To access Headlamp, you'll need the service account token:
 
+# Accessing Services
+
+Once the GitOps deployment is complete, access all services via port-forwarding:
+
+## Grafana (Monitoring Dashboards)
+```bash
+# Get admin password
+kubectl get secret -n monitoring kube-prometheus-stack-grafana -o jsonpath="{.data.admin-password}" | base64 -d ; echo
+
+# Port forward
+kubectl port-forward -n monitoring service/kube-prometheus-stack-grafana 3000:80
 ```
-# Get the Headlamp access token
+**Access**: http://localhost:3000 (admin/[password from above])  
+**Dashboards**: Kubernetes metrics, CloudNativePG, Flux Control Plane
+
+## Headlamp (Kubernetes Dashboard) 
+```bash
+# Get access token
 kubectl get secret headlamp-admin -n kube-system -o jsonpath='{.data.token}' | base64 -d ; echo
-```
 
-Copy this token and paste it into the Headlamp login screen when accessing the UI.
-
-# Accessing All Services
-
-Once everything is deployed, you can access all services via port-forwarding:
-
-## Grafana Dashboard
-```
-kubectl port-forward -n monitoring service/monitoring-grafana 3000:80
-```
-Access: http://localhost:3000 (login: admin/[password from earlier])
-
-## Prometheus
-```
-kubectl port-forward -n monitoring service/monitoring-kube-prometheus-prometheus 9090:9090
-```
-Access: http://localhost:9090
-
-## Alertmanager
-```
-kubectl port-forward -n monitoring service/monitoring-kube-prometheus-alertmanager 9093:9093
-```
-Access: http://localhost:9093
-
-## Headlamp (already covered above)
-```
+# Port forward  
 kubectl port-forward -n kube-system service/headlamp 8080:80
 ```
-Access: http://localhost:8080
+**Access**: http://localhost:8080 (paste token from above)  
+**Features**: Cluster management, resource usage, metrics-server integration
+
+## Prometheus (Metrics Collection)
+```bash
+kubectl port-forward -n monitoring service/kube-prometheus-stack-prometheus 9090:9090
+```
+**Access**: http://localhost:9090
+
+## Alertmanager (Alert Management)
+```bash
+kubectl port-forward -n monitoring service/kube-prometheus-stack-alertmanager 9093:9093
+```
+**Access**: http://localhost:9093
 
 # Example Use Cases
 
