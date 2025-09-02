@@ -5,3 +5,11 @@ resources:
   - namespace.yaml
   - pg-cluster-example.yml
   - cloudnative-pg-dashboard.yml
+patches:
+  - path: patches/podmonitor-labels.yaml
+    target:
+      group: monitoring.coreos.com
+      version: v1
+      kind: PodMonitor
+      name: pg-example-cluster
+      namespace: pg-example-cluster

@@ -3,11 +3,23 @@ apiVersion: v1
 metadata:
   name: headlamp-admin
   namespace: kube-system
+  labels:
+    app.kubernetes.io/name: headlamp
+    app.kubernetes.io/instance: headlamp-admin
+    app.kubernetes.io/component: serviceaccount
+    app.kubernetes.io/part-of: management-platform
+    app.kubernetes.io/managed-by: Flux
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: headlamp-admin
+  labels:
+    app.kubernetes.io/name: headlamp
+    app.kubernetes.io/instance: headlamp-admin
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: management-platform
+    app.kubernetes.io/managed-by: Flux
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -22,6 +34,12 @@ apiVersion: v1
 metadata:
   name: headlamp
   namespace: kube-system
+  labels:
+    app.kubernetes.io/name: headlamp
+    app.kubernetes.io/instance: headlamp
+    app.kubernetes.io/component: service
+    app.kubernetes.io/part-of: management-platform
+    app.kubernetes.io/managed-by: Flux
 spec:
   ports:
     - port: 80
@@ -34,6 +52,12 @@ apiVersion: apps/v1
 metadata:
   name: headlamp
   namespace: kube-system
+  labels:
+    app.kubernetes.io/name: headlamp
+    app.kubernetes.io/instance: headlamp
+    app.kubernetes.io/component: webapp
+    app.kubernetes.io/part-of: management-platform
+    app.kubernetes.io/managed-by: Flux
 spec:
   replicas: 1
   selector:

@@ -23,6 +23,13 @@ spec:
     remediation:
       retries: 3
   values:
+    # Apply standard Kubernetes labels to all components
+    commonLabels:
+      app.kubernetes.io/name: kube-prometheus-stack
+      app.kubernetes.io/instance: monitoring
+      app.kubernetes.io/component: monitoring
+      app.kubernetes.io/part-of: observability-platform
+      app.kubernetes.io/managed-by: Helm
     prometheus:
       prometheusSpec:
         podMonitorSelector:
