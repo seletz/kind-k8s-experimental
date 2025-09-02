@@ -4,100 +4,108 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This repository contains a Kubernetes experimental setup using kind (Kubernetes in Docker) with monitoring, PostgreSQL, and management UI components. It's designed for local development and testing of Kubernetes deployments with a complete observability stack.
+This repository contains a Kubernetes experimental setup using kind (Kubernetes in Docker) with GitOps via Flux CD. It includes monitoring, PostgreSQL, and management UI components deployed declaratively. It's designed for local development and testing of Kubernetes deployments with a complete observability stack using GitOps best practices.
 
 ## Architecture
 
 The setup consists of:
 
 - **kind cluster**: Multi-node local Kubernetes cluster (1 control-plane + 3 worker nodes)
-- **Monitoring stack**: Prometheus, Grafana, and Alertmanager via kube-prometheus-stack
-- **PostgreSQL**: CloudNativePG operator for PostgreSQL clusters with monitoring integration
-- **Management UI**: Headlamp for in-cluster Kubernetes management
-- **Observability**: Pre-configured Grafana dashboards for PostgreSQL monitoring
+- **GitOps**: Flux CD for declarative infrastructure management
+- **Infrastructure controllers**: Helm repositories and CloudNativePG operator via Flux
+- **Infrastructure configs**: Applications deployed after controllers are ready
+- **Monitoring stack**: Prometheus, Grafana, and Alertmanager via HelmRelease
+- **PostgreSQL**: CloudNativePG operator and clusters with monitoring integration
+- **Management UI**: Headlamp for in-cluster Kubernetes management with metrics-server
+- **Validation**: Local and CI validation of GitOps configuration
 
 ## Common Commands
 
 ### Cluster Management
 ```bash
 # Create the experimental cluster
-kind create cluster --config kind-config.yml --name experimental
+mise run create_cluster
+# Or manually: kind create cluster --config kind-config.yml --name experimental
 
 # Delete the cluster
-kind delete cluster --name experimental
+mise run delete_cluster
 
 # Get kubeconfig (for Lens or other tools)
-kind get kubeconfig --name experimental | pbcopy
+mise run prepare_kubeconfig
 ```
 
 ### Prerequisites Installation
 ```bash
 brew install kind lens helm
+# mise will handle other tools (flux, kustomize, etc.)
 ```
 
-### Monitoring Stack Setup
+### GitOps Workflow
 ```bash
-# Add Helm repositories
-helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-helm repo add grafana https://grafana.github.io/helm-charts
-helm repo update
+# Bootstrap Flux (one-time setup)
+flux bootstrap github \
+  --owner=seletz \
+  --repository=kind-k8s-experimental \
+  --branch=develop \
+  --path=clusters/local-kind \
+  --personal
 
-# Install monitoring stack (using inline NodePort settings from README)
-helm install monitoring prometheus-community/kube-prometheus-stack \
-  --namespace monitoring \
-  --create-namespace \
-  --set prometheus.service.type=NodePort \
-  --set grafana.service.type=NodePort \
-  --set alertmanager.service.type=NodePort
+# Check Flux status
+mise run flux_check
+mise run flux_kustomisations
 
-# Get Grafana admin password
-kubectl --namespace monitoring get secrets monitoring-grafana -o jsonpath="{.data.admin-password}" | base64 -d ; echo
+# Validate GitOps configuration locally (before push)
+mise run validate
 
-# Port forward to access Grafana
-export POD_NAME=$(kubectl --namespace monitoring get pod -l "app.kubernetes.io/name=grafana,app.kubernetes.io/instance=monitoring" -oname)
-kubectl --namespace monitoring port-forward $POD_NAME 3000
+# Monitor deployment status
+flux get kustomizations --watch
+kubectl get pods -A --watch
 ```
 
-### PostgreSQL Setup
+### Manual Access (if needed)
 ```bash
-# Install CloudNativePG operator
-kubectl apply --server-side -f \
-  https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-1.27/releases/cnpg-1.27.0.yaml
+# Force reconciliation
+flux reconcile kustomization infra-controllers --with-source
+flux reconcile kustomization infra-configs --with-source
 
-# Create PostgreSQL cluster with monitoring
-kubectl create namespace pg-example-cluster
-kubectl apply -f pg-cluster-example.yml
-
-# Import CloudNativePG dashboard to Grafana
-kubectl apply -f cloudnative-pg-dashboard.yml
-```
-
-### Management UI Setup
-```bash
-# Deploy Headlamp in-cluster UI
-kubectl apply -f kubernetes-headlamp.yaml
-
-# Install metrics-server for resource usage visibility
-kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+# Check specific component status
+kubectl get helmreleases -A
+kubectl get pods -n cnpg-system  # CloudNativePG
+kubectl get pods -n monitoring    # Prometheus stack
+kubectl get pods -n kube-system | grep -E "(headlamp|metrics-server)"
 ```
 
 ## Key Configuration Files
 
+### GitOps Structure
+- `clusters/local-kind/`: Flux cluster configuration
+  - `flux-system/`: Flux bootstrap manifests  
+  - `infrastructure.yaml`: Infrastructure kustomizations with dependencies
+- `infrastructure/`: Two-phase infrastructure deployment
+  - `controllers/`: Phase 1 - Helm repositories and operators
+  - `configs/`: Phase 2 - Applications (depends on controllers)
+
+### Infrastructure Components
 - `kind-config.yml`: Multi-node kind cluster configuration
-- `kube-prometheus-stack-values.yml`: Custom Helm values for monitoring stack with PostgreSQL monitoring selectors
-- `pg-cluster-example.yml`: CloudNativePG cluster definition with 3 instances and monitoring enabled
-- `cloudnative-pg-dashboard.yml`: Grafana ConfigMap for PostgreSQL monitoring dashboard
-- `kubernetes-headlamp.yaml`: In-cluster Headlamp deployment with observability features
-- `grafana-dashboard.json`: Additional Grafana dashboard configuration
+- `infrastructure/configs/monitoring/`: Prometheus/Grafana HelmRelease
+- `infrastructure/configs/postgresql/`: CloudNativePG cluster and dashboard
+- `infrastructure/configs/headlamp/`: Kubernetes dashboard and metrics-server
+- `scripts/validate.sh`: GitOps validation script
+
+### Development Tools
+- `mise.toml`: Tool management and task automation
+- `.github/workflows/test.yaml`: CI validation workflow
 
 ## Development Workflow
 
-1. Create kind cluster with `kind create cluster --config kind-config.yml --name experimental`
-2. Install monitoring stack using Helm with custom values
-3. Deploy PostgreSQL clusters using CloudNativePG manifests
-4. Import monitoring dashboards to Grafana
-5. Access services via kubectl port-forward or NodePort services
-6. Use Lens GUI for visual cluster management (import kubeconfig)
+1. Create kind cluster: `mise run create_cluster`
+2. Bootstrap Flux: `flux bootstrap github ...` (one-time)
+3. Make infrastructure changes in Git
+4. Validate locally: `mise run validate`
+5. Commit and push changes
+6. Flux automatically syncs and deploys
+7. Monitor with: `flux get kustomizations --watch`
+8. Access services via port-forward
 
 ## Service Access
 
