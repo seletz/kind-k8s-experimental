@@ -12,6 +12,7 @@ echo "🎯 Validating Helm releases..."
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts 2>/dev/null || true
 helm repo add grafana https://grafana.github.io/helm-charts 2>/dev/null || true
 helm repo add headlamp https://kubernetes-sigs.github.io/headlamp/ 2>/dev/null || true
+helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/ 2>/dev/null || true
 helm repo update > /dev/null
 
 # Legacy validation for backwards compatibility

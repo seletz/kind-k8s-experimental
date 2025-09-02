@@ -6,3 +6,4 @@ resources:
   - cloudnative-pg-operator.yaml
   - cnpg-operator-config.yaml
   - headlamp-helm-repo.yaml
+  - metrics-server-helm-repo.yaml

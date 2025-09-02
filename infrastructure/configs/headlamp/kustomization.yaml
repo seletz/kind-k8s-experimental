@@ -5,4 +5,3 @@ namespace: kube-system
 resources:
   - helm-release.yaml
   - headlamp-token.yaml
-  - metrics-server-deployment.yaml
