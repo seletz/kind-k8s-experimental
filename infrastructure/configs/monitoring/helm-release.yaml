@@ -32,3 +32,6 @@ spec:
               values: ["monitoring"]
             - key: cnpg.io/cluster
               operator: Exists
+            - key: app.kubernetes.io/component
+              operator: In
+              values: ["database"]

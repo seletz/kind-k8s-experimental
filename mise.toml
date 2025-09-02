@@ -27,7 +27,7 @@ run = "kind get kubeconfig --name experimental > .kube/config"
 run = "flux check"
 
 [tasks.flux_kustomisations]
-run = "flux get kustomisations"
+run = "flux get kustomizations"
 
 [tasks.create_cluster]
 description = "Create kind cluster with experimental configuration"

@@ -3,11 +3,23 @@ kind: Cluster
 metadata:
   name: pg-example-cluster
   namespace: pg-example-cluster
+  labels:
+    app.kubernetes.io/name: postgresql
+    app.kubernetes.io/instance: pg-example-cluster
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: data-platform
+    app.kubernetes.io/managed-by: cloudnative-pg
 spec:
   instances: 3
 
   monitoring:
     enablePodMonitor: true
+    podMonitorMetadata:
+      labels:
+        app.kubernetes.io/name: postgresql
+        app.kubernetes.io/instance: pg-example-cluster
+        app.kubernetes.io/component: database
+        app.kubernetes.io/part-of: data-platform
 
   storage:
     size: 1Gi
