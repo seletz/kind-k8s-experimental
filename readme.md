@@ -5,7 +5,10 @@
 $ brew install kind lens helm
 
 # Create empty cluster
-$ kind create cluster --config kind-config.yml --name experimental
+$ kind create cluster --config clusters/local-kind/kind-config.yml --name experimental
+
+# Or use mise task
+mise run create_cluster
 
 # Export Kubeconfig to clipboard (for importing into lens GUI)
 kind get kubeconfig --name experimental | pbcopy
@@ -21,12 +24,15 @@ flux bootstrap github \
   --owner=seletz \
   --repository=kind-k8s-experimental \
   --branch=develop \
-  --path=clusters/loca-kind \
+  --path=clusters/local-kind \
   --personal
 
-# Or use mise task to check status
+# Or use mise tasks
 mise run flux_check
 mise run flux_kustomisations
+
+# Validate GitOps configuration locally
+mise run validate
 ```
 
 The infrastructure will be automatically deployed via Flux:
