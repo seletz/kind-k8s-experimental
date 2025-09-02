@@ -36,22 +36,36 @@ To create the token:
 
 ## Bootstrap Flux
 
-After creating the cluster, bootstrap Flux:
+After creating the cluster, bootstrap Flux (one-time setup):
 
+### Environment Setup
+
+This repository uses 1Password for secure token management:
+
+```bash
+# Option 1: Use 1Password CLI (recommended)
+mise run prepare_env  # Generates .env from .env.1p using 1Password secrets
+
+# Option 2: Manual token setup
+export GITHUB_TOKEN=<your-fine-grained-token>
 ```
-# Bootstrap Flux (if not already done)
+
+The `.env.1p` file contains 1Password secret references (e.g., `GITHUB_TOKEN=op://vault/github-token/credential`) which are securely injected into `.env` without committing secrets to Git.
+
+### Bootstrap Command
+
+```bash
+# Bootstrap Flux (replace with your GitHub username and repo name)
 flux bootstrap github \
-  --owner=seletz \
-  --repository=kind-k8s-experimental \
+  --owner=<your-github-username> \
+  --repository=<your-repo-name> \
   --branch=develop \
   --path=clusters/local-kind \
   --personal
 
-# Or use mise tasks
+# Check status and validate configuration
 mise run flux_check
 mise run flux_kustomisations
-
-# Validate GitOps configuration locally
 mise run validate
 ```
 
