@@ -5,7 +5,7 @@
 $ brew install kind lens helm
 
 # Create empty cluster
-$ kind create cluster --config clusters/local-kind/kind-config.yml --name experimental
+$ kind create cluster --config kind-config.yml --name experimental
 
 # Or use mise task
 mise run create_cluster
