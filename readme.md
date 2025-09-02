@@ -24,7 +24,7 @@ For Flux bootstrap to work, you need a GitHub fine-grained Personal Access Token
 
 **Required Repository Permissions:**
 - **Administration**: `Read and write` (needed to create deploy keys)
-- **Contents**: `Read and write` (needed to read/write repository files)  
+- **Contents**: `Read and write` (needed to read/write repository files)
 - **Metadata**: `Read-only` (needed to access repository metadata)
 
 To create the token:
@@ -73,11 +73,13 @@ flux get kustomisations --watch
 
 # Check specific components
 kubectl get pods -n monitoring
-kubectl get pods -n pg-example-cluster  
+kubectl get pods -n pg-example-cluster
 kubectl get pods -n kube-system | grep -E "(headlamp|metrics-server)"
 ```
 
-# Dashboards Available
+# Monitoring Stack
+
+## Dashboards Available
 
 ![](images/grafana-kubelet.png)
 
@@ -86,15 +88,19 @@ The GitOps setup includes pre-configured dashboards:
 - **CloudNativePG**: PostgreSQL cluster monitoring and performance
 - **Flux Control Plane**: GitOps pipeline monitoring and controller metrics
 
-# PostgreSQL: CloudNativePG
+## PostgreSQL: CloudNativePG
 
 ![](images/grafana-cnpg.png)
 
 The PostgreSQL cluster is automatically deployed via Flux GitOps:
 - **Operator**: CloudNativePG deployed in `cnpg-system` namespace via Helm
-- **Cluster**: 3-instance PostgreSQL cluster (1 primary + 2 replicas) 
+- **Cluster**: 3-instance PostgreSQL cluster (1 primary + 2 replicas)
 - **Monitoring**: Automatic metrics export with Grafana dashboard
 - **Management**: kubectl cnpg plugin for cluster operations
+
+# Cloud Native PG
+
+Installed using flux.
 
 ## CLI Management
 
@@ -116,39 +122,6 @@ Type "help" for help.
 postgres=#
 ```
 
-
-# In-Cluster Management UI
-
-Following the [docs](https://headlamp.dev/docs/latest/installation/in-cluster/)
-
-![](images/headlamp.png)
-
-```
-# Apply the configuration
-kubectl apply -f kubernetes-headlamp.yaml
-
-# To have headlamp "see" cluster usage, we need to install metrics-server
-# Downloaded from: https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
-# Modified for kind clusters by adding --kubelet-insecure-tls flag due to TLS certificate issues
-#
-# Diff applied to metrics-server Deployment spec.template.spec.containers[0].args:
-#   - --cert-dir=/tmp
-#   - --secure-port=10250
-#   - --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname
-#   - --kubelet-use-node-status-port
-#   - --metric-resolution=15s
-# + - --kubelet-insecure-tls
-#
-kubectl apply -f metrics-server-deployment.yaml
-```
-
-Use port-forward to access:
-
-```
-kubectl port-forward -n kube-system service/headlamp 8080:80
-```
-
-
 # Accessing Services
 
 Once the GitOps deployment is complete, access all services via port-forwarding:
@@ -161,18 +134,18 @@ kubectl get secret -n monitoring kube-prometheus-stack-grafana -o jsonpath="{.da
 # Port forward
 kubectl port-forward -n monitoring service/kube-prometheus-stack-grafana 3000:80
 ```
-**Access**: http://localhost:3000 (admin/[password from above])  
+**Access**: http://localhost:3000 (admin/[password from above])
 **Dashboards**: Kubernetes metrics, CloudNativePG, Flux Control Plane
 
-## Headlamp (Kubernetes Dashboard) 
+## Headlamp (Kubernetes Dashboard)
 ```bash
 # Get access token
 kubectl get secret headlamp-admin -n kube-system -o jsonpath='{.data.token}' | base64 -d ; echo
 
-# Port forward  
+# Port forward
 kubectl port-forward -n kube-system service/headlamp 8080:80
 ```
-**Access**: http://localhost:8080 (paste token from above)  
+**Access**: http://localhost:8080 (paste token from above)
 **Features**: Cluster management, resource usage, metrics-server integration
 
 ## Prometheus (Metrics Collection)
