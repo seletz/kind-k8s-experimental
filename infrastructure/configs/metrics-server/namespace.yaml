@@ -1,0 +1,9 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: metrics-system
+  labels:
+    app.kubernetes.io/name: metrics-server
+    app.kubernetes.io/part-of: management-platform
+    app.kubernetes.io/managed-by: Flux
