@@ -31,7 +31,7 @@ run = "flux get kustomisations"
 
 [tasks.create_cluster]
 description = "Create kind cluster with experimental configuration"
-run = "kind create cluster --config clusters/local-kind/kind-config.yml --name experimental"
+run = "kind create cluster --config kind-config.yml --name experimental"
 
 [tasks.delete_cluster]
 description = "Delete kind cluster"
