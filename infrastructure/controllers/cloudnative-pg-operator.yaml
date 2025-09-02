@@ -8,7 +8,7 @@ spec:
   interval: 1h
   url: https://github.com/cloudnative-pg/cloudnative-pg
   ref:
-    tag: release-1.27
+    tag: v1.27.0
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
