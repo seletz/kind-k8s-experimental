@@ -28,7 +28,7 @@ spec:
     name: flux-system
   path: ./infrastructure/configs
   prune: true
-  wait: false  # Temporarily disable health checks to unblock reconciliation
+  wait: true
   timeout: 10m
   dependsOn:
     - name: infra-controllers
