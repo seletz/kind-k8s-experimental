@@ -34,3 +34,12 @@ spec:
   values:
     crds:
       create: true
+    # Reduce worker count for small kind cluster (4 nodes total)
+    maxConcurrentReconciles: 3
+    resources:
+      requests:
+        cpu: 50m
+        memory: 100Mi
+      limits:
+        cpu: 200m
+        memory: 200Mi
