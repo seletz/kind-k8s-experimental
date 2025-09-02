@@ -11,6 +11,40 @@ $ kind create cluster --config kind-config.yml --name experimental
 kind get kubeconfig --name experimental | pbcopy
 ```
 
+# GitOps with Flux
+
+This repository is configured for GitOps using Flux. After creating the cluster, bootstrap Flux:
+
+```
+# Bootstrap Flux (if not already done)
+flux bootstrap github \
+  --owner=seletz \
+  --repository=kind-k8s-experimental \
+  --branch=develop \
+  --path=clusters/loca-kind \
+  --personal
+
+# Or use mise task to check status
+mise run flux_check
+mise run flux_kustomisations
+```
+
+The infrastructure will be automatically deployed via Flux:
+- **Monitoring**: kube-prometheus-stack via Helm
+- **PostgreSQL**: CloudNativePG operator + cluster
+- **Headlamp**: Kubernetes dashboard + metrics-server
+
+Monitor deployment status:
+```
+# Watch Flux kustomizations
+flux get kustomisations --watch
+
+# Check specific components
+kubectl get pods -n monitoring
+kubectl get pods -n pg-example-cluster  
+kubectl get pods -n kube-system | grep -E "(headlamp|metrics-server)"
+```
+
 # Monitoring
 
 ![](images/grafana-kubelet.png)

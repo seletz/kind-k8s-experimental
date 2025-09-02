@@ -1,0 +1,72 @@
+env_file = '.env'
+
+[settings]
+experimental = true
+legacy_version_file = false # Don't auto-detect from .python-version files
+
+[tools]
+op = "latest"
+helm = "latest"
+kustomize = "latest"
+kubeconform = "latest"
+yq = "latest"
+
+[env]
+KUBECONFIG = "{{config_root}}/.kube/config"
+
+[tasks.prepare_env]
+description = "Prepare local .env from .env.1p"
+run = "cat .env.1p | op inject > .env"
+
+[tasks.prepare_kubeconfig]
+description = "Prepare local kind kubeconfig file"
+run = "kind get kubeconfig --name experimental > .kube/config"
+
+
+[tasks.flux_check]
+run = "flux check"
+
+[tasks.flux_kustomisations]
+run = "flux get kustomisations"
+
+[tasks.create_cluster]
+description = "Create kind cluster with experimental configuration"
+run = "kind create cluster --config clusters/local-kind/kind-config.yml --name experimental"
+
+[tasks.delete_cluster]
+description = "Delete kind cluster"
+run = "kind delete cluster --name experimental"
+
+[tasks.validate]
+description = "Validate all GitOps configuration locally"
+run = '''
+set -e
+
+echo "📥 Downloading Flux OpenAPI schemas..."
+mkdir -p /tmp/flux-crd-schemas
+curl -sSL https://github.com/fluxcd/flux2/releases/latest/download/crd-schemas.tar.gz | tar zxf - -C /tmp/flux-crd-schemas
+
+echo "🔍 Validating YAML syntax..."
+find . -type f \( -name "*.yaml" -o -name "*.yml" \) | xargs -I {} yq e . {} > /dev/null
+
+echo "🎯 Validating Helm releases..."
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts 2>/dev/null || true
+helm repo add grafana https://grafana.github.io/helm-charts 2>/dev/null || true
+helm repo update > /dev/null
+
+helm template kube-prometheus-stack prometheus-community/kube-prometheus-stack \
+  --namespace monitoring \
+  --dry-run > /dev/null
+
+echo "🚀 Validating Kubernetes manifests..."
+find clusters -name "*.yaml" -o -name "*.yml" | xargs kubeconform -strict -ignore-missing-schemas -schema-location default -schema-location /tmp/flux-crd-schemas -verbose
+
+echo "🔧 Validating Kustomize overlays..."
+find . -type f -name "kustomization.y*ml" -print0 | while IFS= read -r -d $'\0' file; do
+  dir="${file%/*}"
+  echo "INFO - Validating kustomization $dir"
+  kustomize build "$dir" | kubeconform -strict -ignore-missing-schemas -schema-location default -schema-location /tmp/flux-crd-schemas
+done
+
+echo "✅ All validations passed!"
+'''
