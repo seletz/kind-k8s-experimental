@@ -4,3 +4,4 @@ kind: Kustomization
 resources:
   - helm-repository.yaml
   - cloudnative-pg-operator.yaml
+  - cnpg-operator-config.yaml
