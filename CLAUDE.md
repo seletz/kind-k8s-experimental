@@ -139,6 +139,29 @@ kubectl get secret headlamp-admin -n kube-system -o jsonpath='{.data.token}' | b
 
 The setup includes integrated monitoring where:
 - PostgreSQL clusters automatically expose metrics via PodMonitor
-- Grafana includes pre-configured dashboards for PostgreSQL observability
-- Prometheus is configured to scrape PostgreSQL metrics using label selectors
+- Grafana includes pre-configured dashboards for PostgreSQL and Flux observability
+- Prometheus is configured to scrape PostgreSQL and Flux controller metrics
 - Headlamp includes observability features with OTLP endpoint configuration
+
+### Key Monitoring Configuration Lessons
+
+**Prometheus PodMonitor Discovery:**
+- Default kube-prometheus-stack uses `podMonitorSelectorNilUsesHelmValues: true`
+- Must set to `false` to discover PodMonitors without matching Helm labels
+- Use `podMonitorSelector: {}` to discover all PodMonitors across namespaces
+
+**CloudNativePG Integration:**
+- Operator must be deployed in `cnpg-system` namespace for proper webhook operation
+- Auto-generated PodMonitors only have `cnpg.io/cluster` labels by default
+- Use operator label inheritance via `INHERITED_LABELS` configuration for custom labels
+- Webhook connectivity requires proper DNS names and port configuration (port 9443)
+
+**Flux Controller Metrics:**
+- Flux controllers expose metrics on `http-prom` port (8080)
+- Requires dedicated PodMonitor to scrape controller metrics for dashboard visibility
+- Flux Control Plane dashboard needs `flux-system` namespace parameter to show data
+
+**GitOps Troubleshooting:**
+- Use `wait: false` temporarily to bypass stuck health checks during reconciliation
+- HelmRelease label conflicts (commonLabels) can cause YAML parsing errors
+- Two-phase deployment (controllers → configs) prevents dependency issues
