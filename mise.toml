@@ -14,6 +14,10 @@ yq = "latest"
 [env]
 KUBECONFIG = "{{config_root}}/.kube/config"
 
+[vars]
+user = "seletz"
+reponame = "kind-k8s-experimental"
+
 [tasks.prepare_env]
 description = "Prepare local .env from .env.1p"
 run = "cat .env.1p | op inject > .env"
@@ -22,6 +26,17 @@ run = "cat .env.1p | op inject > .env"
 description = "Prepare local kind kubeconfig file"
 run = "kind get kubeconfig --name experimental > .kube/config"
 
+
+[tasks.flux_bootstrap]
+run = """flux bootstrap github \
+  --owner={{vars.user}} \
+  --repository={{vars.reponame}} \
+  --branch=develop \
+  --path=clusters/local-kind \
+  --components source-controller,kustomize-controller,helm-controller,notification-controller \
+  --components-extra image-reflector-controller,image-automation-controller \
+  --personal
+"""
 
 [tasks.flux_check]
 run = "flux check"
