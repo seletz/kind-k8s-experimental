@@ -154,10 +154,10 @@ kubectl port-forward -n monitoring service/kube-prometheus-stack-grafana 3000:80
 ## Headlamp (Kubernetes Dashboard with Flux Plugin)
 ```bash
 # Get access token
-kubectl get secret headlamp-admin-token -n kube-system -o jsonpath='{.data.token}' | base64 -d ; echo
+kubectl get secret headlamp-admin-token -n headlamp-system -o jsonpath='{.data.token}' | base64 -d ; echo
 
 # Port forward
-kubectl port-forward -n kube-system service/kube-system-headlamp 8080:80
+kubectl port-forward -n headlamp-system service/headlamp-system-headlamp 8080:80
 ```
 **Access**: http://localhost:8080 (paste token from above)
 **Features**: Cluster management, resource usage, metrics-server integration, **Flux GitOps management**
