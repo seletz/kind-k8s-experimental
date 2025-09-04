@@ -28,7 +28,7 @@ run = "kind get kubeconfig --name experimental > .kube/config"
 
 
 [tasks.flux_bootstrap]
-run = """flux bootstrap github \
+run = """GITHUB_TOKEN=$(gh auth token) flux bootstrap github \
   --owner={{vars.user}} \
   --repository={{vars.reponame}} \
   --branch=develop \
