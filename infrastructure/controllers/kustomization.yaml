@@ -7,3 +7,4 @@ resources:
   - cnpg-operator-config.yaml
   - headlamp-helm-repo.yaml
   - metrics-server-helm-repo.yaml
+  - kube-prometheus-stack-operator.yaml

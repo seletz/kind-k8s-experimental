@@ -16,17 +16,33 @@ spec:
         namespace: flux-system
       interval: 5m
   install:
-    createNamespace: true
+    createNamespace: false  # Namespace created by operator install
     remediation:
       retries: 3
   upgrade:
     remediation:
       retries: 3
   values:
+    # CRDs and operator already installed in controllers phase
+    crds:
+      enabled: false
+    prometheusOperator:
+      enabled: false
+    
+    # Enable monitoring components
     prometheus:
+      enabled: true
       prometheusSpec:
         # Disable restrictive label matching to discover all PodMonitors
         podMonitorSelectorNilUsesHelmValues: false
         serviceMonitorSelectorNilUsesHelmValues: false
         ruleSelectorNilUsesHelmValues: false
         podMonitorSelector: {}  # Now truly selects all PodMonitors
+    alertmanager:
+      enabled: true
+    grafana:
+      enabled: true
+    nodeExporter:
+      enabled: true
+    kubeStateMetrics:
+      enabled: true
