@@ -5,4 +5,4 @@ resources:
   - monitoring
   - postgresql
   - metrics-server
-  # - headlamp
+  - headlamp
