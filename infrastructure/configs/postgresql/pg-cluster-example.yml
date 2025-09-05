@@ -10,7 +10,7 @@ metadata:
     app.kubernetes.io/part-of: data-platform
     app.kubernetes.io/managed-by: cloudnative-pg
 spec:
-  instances: 2
+  instances: 3
 
   monitoring:
     enablePodMonitor: true
